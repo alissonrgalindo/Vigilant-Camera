@@ -9,6 +9,10 @@ export default function CameraMotionDetector() {
   const [activeTab, setActiveTab] = useState<"camera" | "snapshot">("camera");
 
   useEffect(() => {
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+
     const getCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -87,13 +91,13 @@ export default function CameraMotionDetector() {
 
       if ("Notification" in window) {
         if (Notification.permission === "granted") {
-          new Notification("\ud83d\udcf8 Movimento Detectado!", {
+          new Notification("📸 Movimento Detectado!", {
             body: "Snapshot salvo no Supabase.",
           } as any);
         } else if (Notification.permission !== "denied") {
           Notification.requestPermission().then((permission) => {
             if (permission === "granted") {
-              new Notification("\ud83d\udcf8 Movimento Detectado!", {
+              new Notification("📸 Movimento Detectado!", {
                 body: "Snapshot salvo no Supabase.",
               } as any);
             }

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES6",                         
+    "target": "ES6",     
+    "types": ["vite/client"],
     "lib": ["DOM", "DOM.Iterable", "ES2015"], 
     "allowJs": true,
     "skipLibCheck": true,
