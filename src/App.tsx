@@ -1,5 +1,4 @@
-import React from "react";
-import CameraMotionDetector from "./components/CameraMotionDetector/CameraMotionDetector";
+import CameraMotionDetector from "./components/CameraMotionDetector";
 
 export default function App() {
   return (

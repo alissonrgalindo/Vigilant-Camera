@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { supabase } from "../../utils/supabase/client";
 
 export default function CameraMotionDetector() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -18,7 +19,6 @@ export default function CameraMotionDetector() {
         console.error("Erro ao acessar a câmera:", err);
       }
     };
-
     getCamera();
   }, []);
 
@@ -42,13 +42,11 @@ export default function CameraMotionDetector() {
 
     const detectMotion = () => {
       if (!canvasRef.current || !videoRef.current) return;
-
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d");
       const video = videoRef.current;
 
       if (!context || video.videoWidth === 0 || video.videoHeight === 0) return;
-
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
@@ -64,14 +62,12 @@ export default function CameraMotionDetector() {
             diff++;
           }
         }
-
         const detected = diff > 1000;
         if (detected && !motionDetected) {
           handleMotionDetected();
         }
         setMotionDetected(detected);
       }
-
       prevImageData = currentImageData;
     };
 
@@ -79,22 +75,31 @@ export default function CameraMotionDetector() {
     return () => clearInterval(interval);
   }, [motionDetected]);
 
-  const handleMotionDetected = () => {
-    if ("Notification" in window) {
-      if (Notification.permission === "granted") {
-        new Notification("📸 Movimento Detectado!");
-      } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then((permission) => {
-          if (permission === "granted") {
-            new Notification("📸 Movimento Detectado!");
-          }
-        });
-      }
-    }
-
+  const handleMotionDetected = async () => {
     if (canvasRef.current) {
       const snap = canvasRef.current.toDataURL("image/png");
       setSnapshot(snap);
+
+      await supabase.from("motion_events").insert({
+        device: "notebook",
+        snapshot: snap,
+      });
+
+      if ("Notification" in window) {
+        if (Notification.permission === "granted") {
+          new Notification("\ud83d\udcf8 Movimento Detectado!", {
+            body: "Snapshot salvo no Supabase.",
+          } as any);
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then((permission) => {
+            if (permission === "granted") {
+              new Notification("\ud83d\udcf8 Movimento Detectado!", {
+                body: "Snapshot salvo no Supabase.",
+              } as any);
+            }
+          });
+        }
+      }
     }
   };
 
@@ -102,7 +107,6 @@ export default function CameraMotionDetector() {
     <div className="w-[100dvw] p-4">
       <h1 className="text-2xl font-bold mb-4 text-center text-gray-800">Câmera de Vigilância</h1>
 
-      {/* Tabs */}
       <div className="w-full flex justify-center mb-4">
         <button
           onClick={() => setActiveTab("camera")}
