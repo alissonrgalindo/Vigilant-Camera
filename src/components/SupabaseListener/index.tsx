@@ -3,7 +3,9 @@ import { supabase } from "../../utils/supabase/client";
 
 export default function SupabaseListener() {
   useEffect(() => {
-    Notification.requestPermission();
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
 
     const channel = supabase
       .channel("motion_events_channel")
@@ -15,11 +17,22 @@ export default function SupabaseListener() {
           table: "motion_events",
         },
         (payload) => {
-          const { snapshot } = payload.new;
+          const { snapshot, device } = payload.new;
+          console.log("📡 Novo movimento detectado:", payload.new);
+
           new Notification("🚨 Movimento Detectado!", {
-            body: "Clique para visualizar o snapshot.",
+            body: `Dispositivo: ${device}`,
             image: snapshot,
-          }as any);
+          } as any);
+
+          if ("vibrate" in navigator) {
+            navigator.vibrate?.(200);
+          }
+
+          const audio = new Audio("/alert.mp3");
+          audio.play().catch(() => {
+            console.warn("🔇 Falha ao tocar som de alerta (talvez bloqueado por autoplay)");
+          });
         }
       )
       .subscribe();
